@@ -4,8 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>My Login Website</title>
 
+  <!-- Supabase Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -24,10 +26,10 @@
       padding: 20px;
     }
 
-    .login-box {
+    .container {
       background: white;
       width: 100%;
-      max-width: 390px;
+      max-width: 400px;
       padding: 35px;
       border-radius: 18px;
       box-shadow: 0 10px 35px rgba(0,0,0,0.12);
@@ -36,12 +38,10 @@
 
     h1 {
       color: #1e293b;
-      margin-bottom: 10px;
     }
 
-    .subtitle {
+    p {
       color: #64748b;
-      margin-bottom: 25px;
     }
 
     input {
@@ -84,58 +84,49 @@
 
     #message {
       margin-top: 20px;
-      color: #334155;
       overflow-wrap: anywhere;
     }
 
     #account {
       display: none;
     }
-
-    .small-text {
-      font-size: 13px;
-      color: #64748b;
-      margin-top: 20px;
-    }
   </style>
 </head>
 
 <body>
 
-  <div class="login-box">
+  <div class="container">
 
-    <div id="login-section">
+    <!-- LOGIN AND SIGNUP -->
+
+    <div id="loginSection">
 
       <h1>Welcome Back</h1>
-      <p class="subtitle">Login to your account</p>
+      <p>Login to your account</p>
 
       <input
         type="email"
         id="email"
         placeholder="Email address"
-        autocomplete="email"
       >
 
       <input
         type="password"
         id="password"
         placeholder="Password"
-        autocomplete="current-password"
       >
 
-      <button id="signupBtn" onclick="signup()">
+      <button id="signupButton" onclick="signup()">
         Create Account
       </button>
 
-      <button id="loginBtn" onclick="login()">
+      <button id="loginButton" onclick="login()">
         Login
       </button>
 
-      <p class="small-text">
-        Don't have an account? Create one above.
-      </p>
-
     </div>
+
+    <!-- ACCOUNT PAGE -->
 
     <div id="account">
 
@@ -157,13 +148,13 @@
 
   <script>
 
-    // SUPABASE CONNECTION
+    // SUPABASE CONFIGURATION
 
     const SUPABASE_URL =
       "https://buvimzyppifiaizbsxmk.supabase.co";
 
     const SUPABASE_KEY =
-      "sb_publishable_aPmgGHBXDrjzB_XhBAz6xQ_0td-tUQw ";
+      "Sb_publishable_apmgGHBXDrjzB_XhBAz6x_0td-tuQw";
 
     const client = window.supabase.createClient(
       SUPABASE_URL,
@@ -172,92 +163,103 @@
 
     const message = document.getElementById("message");
 
+    // MESSAGE FUNCTION
+
     function showMessage(text) {
       message.textContent = text;
     }
 
-    function setLoading(loading) {
-      document.getElementById("signupBtn").disabled = loading;
-      document.getElementById("loginBtn").disabled = loading;
-    }
+    // LOADING FUNCTION
 
-    function getCredentials() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-
-      if (!email || !password) {
-        throw new Error("Please enter your email and password.");
-      }
-
-      return { email, password };
+    function setLoading(value) {
+      document.getElementById("signupButton").disabled = value;
+      document.getElementById("loginButton").disabled = value;
     }
 
     // CREATE ACCOUNT
 
     async function signup() {
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        showMessage("Enter your email and password.");
+        return;
+      }
+
       setLoading(true);
-      showMessage("Creating your account...");
+      showMessage("Creating account...");
 
       try {
-        const { email, password } = getCredentials();
 
         const { data, error } = await client.auth.signUp({
-          email,
-          password,
+          email: email,
+          password: password,
           options: {
-            emailRedirectTo: window.location.href
+            emailRedirectTo: window.location.origin
           }
         });
 
         if (error) throw error;
 
         if (data.session) {
+          showAccount(data.user);
           showMessage("Account created successfully!");
         } else {
           showMessage(
-            "Account created! Please check your email to confirm it."
+            "Account created! Please check your email to confirm."
           );
         }
 
       } catch (error) {
-        showMessage(error.message || "Unable to create account.");
-      } finally {
-        setLoading(false);
+        showMessage("Signup error: " + error.message);
       }
+
+      setLoading(false);
     }
 
     // LOGIN
 
     async function login() {
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        showMessage("Enter your email and password.");
+        return;
+      }
+
       setLoading(true);
       showMessage("Logging in...");
 
       try {
-        const { email, password } = getCredentials();
 
         const { data, error } =
           await client.auth.signInWithPassword({
-            email,
-            password
+            email: email,
+            password: password
           });
 
         if (error) throw error;
 
+        showAccount(data.user);
         showMessage("Login successful!");
 
-        showAccount(data.user);
-
       } catch (error) {
-        showMessage(error.message || "Unable to log in.");
-      } finally {
-        setLoading(false);
+        showMessage("Login error: " + error.message);
       }
+
+      setLoading(false);
     }
 
-    // SHOW LOGGED-IN ACCOUNT
+    // SHOW ACCOUNT
 
     function showAccount(user) {
-      document.getElementById("login-section").style.display = "none";
+
+      document.getElementById("loginSection").style.display = "none";
+
       document.getElementById("account").style.display = "block";
 
       document.getElementById("userEmail").textContent =
@@ -267,27 +269,35 @@
     // LOGOUT
 
     async function logout() {
+
       showMessage("Logging out...");
 
       try {
+
         const { error } = await client.auth.signOut();
 
         if (error) throw error;
 
-        document.getElementById("login-section").style.display = "block";
+        document.getElementById("loginSection").style.display = "block";
+
         document.getElementById("account").style.display = "none";
 
-        showMessage("You have successfully logged out.");
+        document.getElementById("email").value = "";
+        document.getElementById("password").value = "";
+
+        showMessage("You have successfully logged out!");
 
       } catch (error) {
-        showMessage(error.message || "Logout failed.");
+        showMessage("Logout error: " + error.message);
       }
     }
 
-    // CHECK EXISTING LOGIN SESSION
+    // CHECK EXISTING SESSION
 
     async function checkSession() {
+
       try {
+
         const { data, error } = await client.auth.getSession();
 
         if (error) throw error;
@@ -297,9 +307,11 @@
         }
 
       } catch (error) {
-        showMessage("Session check failed: " + error.message);
+        showMessage("Session error: " + error.message);
       }
     }
+
+    // START WEBSITE
 
     checkSession();
 
