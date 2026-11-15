@@ -69,13 +69,21 @@ async function signup() {
 }
 
 async function login() {
-  const { error } = await client.auth.signInWithPassword({
-    email: document.getElementById("email").value,
-    password: document.getElementById("password").value
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email: email,
+    password: password
   });
 
+  if (error) {
+    document.getElementById("message").textContent = error.message;
+    return;
+  }
+
   document.getElementById("message").textContent =
-    error ? error.message : "Login successful!";
+    "Login successful! Welcome " + data.user.email;
 }
 
 async function logout() {
