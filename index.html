@@ -1,106 +1,309 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Login Website</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial;
-      background: #eef2f7;
+      margin: 0;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+      padding: 20px;
     }
-    .login {
+
+    .login-box {
       background: white;
-      padding: 30px;
-      border-radius: 12px;
-      width: 300px;
+      width: 100%;
+      max-width: 390px;
+      padding: 35px;
+      border-radius: 18px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.12);
       text-align: center;
     }
-    input, button {
-      box-sizing: border-box;
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
+
+    h1 {
+      color: #1e293b;
+      margin-bottom: 10px;
     }
+
+    .subtitle {
+      color: #64748b;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
     button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 8px;
       background: #2563eb;
       color: white;
-      border: 0;
-      border-radius: 6px;
+      font-size: 16px;
       cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .logout {
+      background: #dc2626;
+    }
+
+    .logout:hover {
+      background: #b91c1c;
+    }
+
+    #message {
+      margin-top: 20px;
+      color: #334155;
+      overflow-wrap: anywhere;
+    }
+
+    #account {
+      display: none;
+    }
+
+    .small-text {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 20px;
     }
   </style>
 </head>
+
 <body>
 
-<div class="login">
-  <h2>Welcome Back</h2>
-  <input id="email" type="email" placeholder="Email address">
-  <input id="password" type="password" placeholder="Password">
+  <div class="login-box">
 
-  <button onclick="signup()">Create Account</button>
-  <button onclick="login()">Login</button>
-  <button onclick="logout()">Logout</button>
+    <div id="login-section">
 
-  <p id="message"></p>
-</div>
+      <h1>Welcome Back</h1>
+      <p class="subtitle">Login to your account</p>
 
-<script>
-const SUPABASE_URL = "https:// buvimzyppjfiaizbsxmk.supabase.co ";
-const SUPABASE_KEY = "sb_publishable_aPmgGHBXDrjzB_XhBAz6xQ_0td-tUQw ";
+      <input
+        type="email"
+        id="email"
+        placeholder="Email address"
+        autocomplete="email"
+      >
 
-const client = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        autocomplete="current-password"
+      >
 
-async function signup() {
-async function signup() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+      <button id="signupBtn" onclick="signup()">
+        Create Account
+      </button>
 
-  const { data, error } = await client.auth.signUp({
-    email: email,
-    password: password
-  });
+      <button id="loginBtn" onclick="login()">
+        Login
+      </button>
 
-  if (error) {
-    document.getElementById("message").textContent = error.message;
-    return;
-  }
+      <p class="small-text">
+        Don't have an account? Create one above.
+      </p>
 
-  document.getElementById("message").textContent =
-    "Account created! Check your email for confirmation.";
-}
+    </div>
 
-async function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+    <div id="account">
 
-  const { data, error } = await client.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
+      <h1>Welcome!</h1>
 
-  if (error) {
-    document.getElementById("message").textContent = error.message;
-    return;
-  }
+      <p>You are successfully logged in.</p>
 
-  document.getElementById("message").textContent =
-    "Login successful! Welcome " + data.user.email;
-}
+      <p id="userEmail"></p>
 
-async function logout() {
-  const { error } = await client.auth.signOut();
-  document.getElementById("message").textContent =
-    error ? error.message : "You have logged out.";
-}
-</script>
+      <button class="logout" onclick="logout()">
+        Logout
+      </button>
+
+    </div>
+
+    <p id="message" role="status" aria-live="polite"></p>
+
+  </div>
+
+  <script>
+
+    // SUPABASE CONNECTION
+
+    const SUPABASE_URL =
+      "https://buvimzyppifiaizbsxmk.supabase.co";
+
+    const SUPABASE_KEY =
+      "PASTE_YOUR_SB_PUBLISHABLE_KEY_HERE";
+
+    const client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const message = document.getElementById("message");
+
+    function showMessage(text) {
+      message.textContent = text;
+    }
+
+    function setLoading(loading) {
+      document.getElementById("signupBtn").disabled = loading;
+      document.getElementById("loginBtn").disabled = loading;
+    }
+
+    function getCredentials() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        throw new Error("Please enter your email and password.");
+      }
+
+      return { email, password };
+    }
+
+    // CREATE ACCOUNT
+
+    async function signup() {
+      setLoading(true);
+      showMessage("Creating your account...");
+
+      try {
+        const { email, password } = getCredentials();
+
+        const { data, error } = await client.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.href
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.session) {
+          showMessage("Account created successfully!");
+        } else {
+          showMessage(
+            "Account created! Please check your email to confirm it."
+          );
+        }
+
+      } catch (error) {
+        showMessage(error.message || "Unable to create account.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // LOGIN
+
+    async function login() {
+      setLoading(true);
+      showMessage("Logging in...");
+
+      try {
+        const { email, password } = getCredentials();
+
+        const { data, error } =
+          await client.auth.signInWithPassword({
+            email,
+            password
+          });
+
+        if (error) throw error;
+
+        showMessage("Login successful!");
+
+        showAccount(data.user);
+
+      } catch (error) {
+        showMessage(error.message || "Unable to log in.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // SHOW LOGGED-IN ACCOUNT
+
+    function showAccount(user) {
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("account").style.display = "block";
+
+      document.getElementById("userEmail").textContent =
+        "Logged in as: " + user.email;
+    }
+
+    // LOGOUT
+
+    async function logout() {
+      showMessage("Logging out...");
+
+      try {
+        const { error } = await client.auth.signOut();
+
+        if (error) throw error;
+
+        document.getElementById("login-section").style.display = "block";
+        document.getElementById("account").style.display = "none";
+
+        showMessage("You have successfully logged out.");
+
+      } catch (error) {
+        showMessage(error.message || "Logout failed.");
+      }
+    }
+
+    // CHECK EXISTING LOGIN SESSION
+
+    async function checkSession() {
+      try {
+        const { data, error } = await client.auth.getSession();
+
+        if (error) throw error;
+
+        if (data.session) {
+          showAccount(data.session.user);
+        }
+
+      } catch (error) {
+        showMessage("Session check failed: " + error.message);
+      }
+    }
+
+    checkSession();
+
+  </script>
 
 </body>
 </html>
